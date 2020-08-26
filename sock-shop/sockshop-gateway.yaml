@@ -1,0 +1,31 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: sock-shop
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - '*'
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sock-shop
+spec:
+  gateways:
+  - sock-shop
+  hosts:
+  - '*'
+  http:
+  - route:
+    - destination:
+        host: front-end
+        port:
+          number: 80
