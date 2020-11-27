@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: growi-mongo
+  name: growi-mongo
+spec:
+  serviceName: growi-mongo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: growi-mongo
+  template:
+    metadata:
+      labels:
+        app: growi-mongo
+    spec:
+      containers:
+      - name: growi-mongo
+        image: mongo:4.4
+        volumeMounts:
+        - name: mongo-config
+          mountPath: /data/configdb
+        - name: mongo-db
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-config
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: rook-ceph-block
+      resources:
+        requests:
+          storage: 256Mi
+  - metadata:
+      name: mongo-db
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: rook-ceph-block
+      resources:
+        requests:
+          storage: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: growi-mongo
+  name: growi-mongo
+spec:
+  ports:
+  - port: 27017
+    protocol: TCP
+    targetPort: 27017
+    name: mongodb
+  selector:
+    app: growi-mongo
+  type: ClusterIP
