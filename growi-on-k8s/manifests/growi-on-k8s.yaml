@@ -1,5 +1,46 @@
 ---
 apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: growi-app
+  name: growi-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: growi-app
+  template:
+    metadata:
+      labels:
+        app: growi-app
+    spec:
+      containers:
+      - image: weseek/growi:4
+        name: growi-app
+        env:
+          - name: MONGO_URI
+            value: mongodb://growi-mongo:27017/growi
+          - name: PASSWORD_SEED
+            value: changeme
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: growi-app
+  name: growi-app
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+    name: growi
+  selector:
+    app: growi-app
+  type: LoadBalancer
+---
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
