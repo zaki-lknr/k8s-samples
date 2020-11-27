@@ -23,6 +23,15 @@ spec:
             value: mongodb://growi-mongo:27017/growi
           - name: PASSWORD_SEED
             value: changeme
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
 ---
 apiVersion: v1
 kind: Service
