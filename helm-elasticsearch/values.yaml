@@ -1,0 +1,23 @@
+---
+replicas: 1
+minimumMasterNodes: 1
+
+image: "docker.elastic.co/elasticsearch/elasticsearch"
+imageTag: "7.9.3"
+imagePullPolicy: "IfNotPresent"
+
+esJavaOpts: "-Xmx1g -Xms1g"
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "2Gi"
+  limits:
+    cpu: "500m"
+    memory: "2Gi"
+
+volumeClaimTemplate:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 2Gi
