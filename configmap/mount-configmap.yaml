@@ -10,6 +10,7 @@ kind: ConfigMap
 metadata:
   name: configmap-sample-data
 ---
+# ConfigMapを丸ごとマウントする
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,3 +37,34 @@ spec:
       - name: configmap-volume
         configMap:
           name: configmap-sample-data
+---
+# ConfigMapの指定キーのみマウントする
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: file-mount
+  name: file-mount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: file-mount
+  template:
+    metadata:
+      labels:
+        app: file-mount
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        volumeMounts:
+        - name: configmap-volume1
+          mountPath: /var/tmp/configmap
+      volumes:
+      - name: configmap-volume1
+        configMap:
+          name: configmap-sample-data
+          items:
+          - key: sample1.txt
+            path: data1
