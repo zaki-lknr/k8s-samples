@@ -1,0 +1,38 @@
+apiVersion: v1
+data:
+  sample1.txt: |
+    nya-n
+    wanwan
+  sample2.txt: |
+    this file is sample file.
+    curry tabetai!
+kind: ConfigMap
+metadata:
+  name: configmap-sample-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cm-mount-app
+  name: cm-mount-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cm-mount-app
+  template:
+    metadata:
+      labels:
+        app: cm-mount-app
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /var/tmp/configmap
+      volumes:
+      - name: configmap-volume
+        configMap:
+          name: configmap-sample-data
