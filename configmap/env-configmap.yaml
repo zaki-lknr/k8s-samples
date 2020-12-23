@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  SAMPLE_EDITOR: emacs
+  SAMPLE_SERVER: 10.0.0.2
+  SAMPLE_PORT: '8080'
+  SAMPLE_USERNAME: curry
+kind: ConfigMap
+metadata:
+  name: configmap-key-value
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cm-value-app
+  name: cm-value-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cm-value-app
+  template:
+    metadata:
+      labels:
+        app: cm-value-app
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        envFrom:
+        - configMapRef:
+            name: configmap-key-value
