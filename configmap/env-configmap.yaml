@@ -30,3 +30,29 @@ spec:
         envFrom:
         - configMapRef:
             name: configmap-key-value
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cm-value-app-1key
+  name: cm-value-app-1key
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cm-value-app-1key
+  template:
+    metadata:
+      labels:
+        app: cm-value-app-1key
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        env:
+        - name: PICKUPED_CONFIGMAP_KEYVAL
+          valueFrom:
+            configMapKeyRef:
+              name: configmap-key-value
+              key: SAMPLE_EDITOR
