@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: environment-sample
+  name: environment-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: environment-sample
+  template:
+    metadata:
+      labels:
+        app: environment-sample
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        env:
+          - name: REMOTE_SERVER
+            value: "10.0.0.2"
+          - name: REMOTE_PORT
+            value: "80"
