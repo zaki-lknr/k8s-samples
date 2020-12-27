@@ -1,0 +1,81 @@
+apiVersion: v1
+data:
+  sample1.txt: |
+    nya-n
+    wanwan
+  sample2.txt: |
+    this file is sample file.
+    curry tabetai!
+kind: ConfigMap
+metadata:
+  name: sampledata2
+---
+# subPath未使用
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cm-mount-no-subpath
+  name: cm-mount-no-subpath
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cm-mount-no-subpath
+  template:
+    metadata:
+      labels:
+        app: cm-mount-no-subpath
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /var/tmp/configmap
+      - image: centos:7
+        name: centos7
+        command: [ "tail", "-f", "/dev/null"]
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /tmp/configmap-file
+      volumes:
+      - name: configmap-volume
+        configMap:
+          name: sampledata2
+---
+# subPath使用
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cm-mount-subpath
+  name: cm-mount-subpath
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cm-mount-subpath
+  template:
+    metadata:
+      labels:
+        app: cm-mount-subpath
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /var/tmp/configmap/nyan
+          subPath: sample1.txt
+      - image: centos:7
+        name: centos7
+        command: [ "tail", "-f", "/dev/null"]
+        volumeMounts:
+        - name: configmap-volume
+          mountPath: /tmp/configmap-file/wan
+          subPath: sample1.txt
+      volumes:
+      - name: configmap-volume
+        configMap:
+          name: sampledata2
