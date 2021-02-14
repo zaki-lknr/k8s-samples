@@ -17,7 +17,7 @@ metadata:
   namespace: rbac-sample
 rules:
 - apiGroups:
-  - ""
+  - '*'
   resources:
   - '*'
   verbs:
