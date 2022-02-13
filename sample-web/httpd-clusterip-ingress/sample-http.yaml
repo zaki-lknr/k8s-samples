@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-sample
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-http
+  name: sample-http
+  namespace: ingress-sample
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-http
+  template:
+    metadata:
+      labels:
+        app: sample-http
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sample-http
+  name: sample-http
+  namespace: ingress-sample
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+    name: http
+  selector:
+    app: sample-http
+  type: ClusterIP
+---
+apiVersion: "networking.k8s.io/v1"
+kind: Ingress
+metadata:
+  name: sample-ingress
+  namespace: ingress-sample
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik-lb
+spec:
+  ingressClassName: traefik-lb
+  rules:
+  - host: www2.example.org
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: sample-http
+            port:
+              number: 80
+# ---
+# # Warning: extensions/v1beta1 Ingress is deprecated in v1.14+, unavailable in v1.22+; use networking.k8s.io/v1 Ingress
+# apiVersion: "networking.k8s.io/v1"
+# kind: Ingress
+# metadata:
+#   name: sample-ingress
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik-lb
+# spec:
+#   ingressClassName: traefik-lb
+#   rules:
+#   - host: www2.example.org
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: sample-http
+#           servicePort: 80
