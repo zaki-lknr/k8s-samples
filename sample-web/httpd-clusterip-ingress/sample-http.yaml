@@ -50,7 +50,7 @@ metadata:
   # annotations:
   #   kubernetes.io/ingress.class: traefik-lb
 spec:
-  ingressClassName: traefik-lb
+  # ingressClassName: traefik-lb
   rules:
   - host: www2.example.org
     http:
