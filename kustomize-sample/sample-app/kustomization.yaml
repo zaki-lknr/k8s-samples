@@ -3,3 +3,7 @@ kind: Kustomization
 resources:
 - sample-http.yaml
 namespace: sample
+configMapGenerator:
+- name: sample-configure
+  files:
+  - sample.config
