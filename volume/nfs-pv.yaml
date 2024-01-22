@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv01
+spec:
+  storageClassName: nfs
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    server: pecorino
+    path: /dev/volumes/pv01
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv01-claim
+spec:
+  storageClassName: nfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-app
+  name: sample-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
+        volumeMounts:
+        - name: sample-volume
+          mountPath: /tmp
+      volumes:
+      - name: sample-volume
+        persistentVolumeClaim:
+          claimName: pv01-claim
+
+### event
+### 38s         Warning   FailedMount            pod/sample-app-85c7f885b4-kd8md    MountVolume.SetUp failed for volume "pv01" : mount failed: exit status 32...
+
+### 
+### [zaki@cloud-dev2 k3s-nfs]$ kubectl get pod -o wide
+### NAME                          READY   STATUS              RESTARTS   AGE     IP           NODE        NOMINATED NODE   READINESS GATES
+### work-pod                      1/1     Running             0          2d10h   10.42.0.62   k3s-node1   <none>           <none>
+### sample-app-85c7f885b4-kd8md   0/1     ContainerCreating   0          4m24s   <none>       k3s-node1   <none>           <none>
+
+### mount
+### root@k3s-node1:~# mount -t nfs -o rw pecorino:/dev /mnt -v
+### mount: /mnt: bad option; for several filesystems (e.g. nfs, cifs) you might need a /sbin/mount.<type> helper program.
+### root@k3s-node1:~# echo $?
+### 32
+
+### require:
+### root@k3s-node1:~# apt-get install nfs-common
