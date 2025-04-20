@@ -1,0 +1,149 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: prometheus-node-exporter
+  namespace: kube-system
+spec:
+  targetNamespace: monitoring
+  createNamespace: true
+  repo: https://prometheus-community.github.io/helm-charts
+  chart: prometheus-node-exporter
+  version: 4.45.0
+# node exporterは特にパラメタ指定不要なので省略
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: prometheus-adapter
+  namespace: kube-system
+spec:
+  targetNamespace: monitoring
+  createNamespace: true
+  repo: https://prometheus-community.github.io/helm-charts
+  chart: prometheus-adapter
+  version: 4.13.0
+  valuesContent: |
+    # Url to access prometheus
+    prometheus:
+      url: <your_prometheus_server_address>
+      port: <your_prometheus_server_port>
+      path: ""
+
+    rules:
+      resource:
+        cpu:
+          containerQuery: |
+            sum by (<<.GroupBy>>) (
+              rate(container_cpu_usage_seconds_total{container!="",<<.LabelMatchers>>}[3m])
+            )
+          nodeQuery: |
+            sum  by (<<.GroupBy>>) (
+              rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal",<<.LabelMatchers>>}[3m])
+            )
+          resources:
+            overrides:
+              node:
+                resource: node
+              namespace:
+                resource: namespace
+              pod:
+                resource: pod
+          containerLabel: container
+        memory:
+          containerQuery: |
+            sum by (<<.GroupBy>>) (
+              avg_over_time(container_memory_working_set_bytes{container!="",<<.LabelMatchers>>}[3m])
+            )
+          nodeQuery: |
+            sum by (<<.GroupBy>>) (
+              avg_over_time(node_memory_MemTotal_bytes{<<.LabelMatchers>>}[3m])
+              -
+              avg_over_time(node_memory_MemAvailable_bytes{<<.LabelMatchers>>}[3m])
+            )
+          resources:
+            overrides:
+              node:
+                resource: node
+              namespace:
+                resource: namespace
+              pod:
+                resource: pod
+          containerLabel: container
+        window: 3m
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: monitoring-user
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: monitoring-metrics-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+      - ingresses
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "extensions"
+      - "networking.k8s.io"
+    resources:
+      - ingresses/status
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - "/metrics"
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-metrics-clusterrole
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: monitoring-metrics-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: monitoring-user
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: monitoring-token
+  namespace: monitoring
+  annotations:
+    kubernetes.io/service-account.name: "monitoring-user"
+type: kubernetes.io/service-account-token
